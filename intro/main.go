@@ -21,10 +21,22 @@ func main(){
 
 
 	// short hand syntax
-	name:= "golang"
-	age:= 22
-	isAdult:= true
+	// name:= "golang"
+	// age:= 22
+	// isAdult:= true
 
+	// constants
+	// const name = "golang"
+	// const age = 14
+	// const isAdult = false
+
+	// constant grouping
+	const(
+		name = "golang"
+		age= 43
+		isAdult = true
+	)
+	
 	fmt.Println(name)
 	fmt.Println(age)
 	fmt.Println(isAdult)
