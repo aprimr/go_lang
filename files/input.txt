@@ -1,0 +1,10 @@
+Hey I am a file
+I am still a clean fileI
+ERROR this is an error 1
+ERROR this is an error 2
+ERROR this is an error 3
+Hey I am a file
+I am still a clean fileI
+Hey I am a file
+I am still a clean fileI
+ERROR this is an error 4
