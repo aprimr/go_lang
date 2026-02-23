@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
 
 // func main() {
 // 	// creating channel
@@ -20,20 +17,31 @@ import (
 // 	fmt.Println(data)
 // }
 
-func cook(ch chan string) {
-	ch <- "momo"
-}
+// func cook(ch chan string) {
+// 	ch <- "momo"
+// }
 
-func waiter(ch chan string) {
-	food := <-ch
-	fmt.Println("Serving:", food)
-}
+// func waiter(ch chan string) {
+// 	food := <-ch
+// 	fmt.Println("Serving:", food)
+// }
+
+// func main() {
+// 	ch := make(chan string)
+
+// 	go cook(ch)
+// 	go waiter(ch)
+
+// 	time.Sleep(time.Second)
+// }
 
 func main() {
-	ch := make(chan string)
+	ch := make(chan int, 3) // buffered channel
 
-	go cook(ch)
-	go waiter(ch)
+	ch <- 1
+	ch <- 2
+	ch <- 3
+	ch <- 4 // deadlock
 
-	time.Sleep(time.Second)
+	fmt.Println("Done")
 }
