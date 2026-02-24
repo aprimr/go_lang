@@ -3,9 +3,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
 // func helloHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,47 +32,94 @@ import (
 
 // }
 
-func welcomeHandler(w http.ResponseWriter, r *http.Request) {
+// func welcomeHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed (Use GET method)", http.StatusMethodNotAllowed)
+// 	if r.Method != http.MethodGet {
+// 		http.Error(w, "Method not allowed (Use GET method)", http.StatusMethodNotAllowed)
+// 		return
+// 	}
+
+// 	fmt.Println(r.Method)
+// 	fmt.Println(r.URL.Path)
+// 	fmt.Fprintln(w, "Welcome to my API")
+// }
+
+// func aboutHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Println(r.Method)
+// 	fmt.Println(r.URL.Path)
+// 	fmt.Fprintln(w, "This is about route.")
+// }
+
+// func timeHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Println(r.Method)
+// 	fmt.Println(r.URL.Path)
+// 	fmt.Fprintln(w, time.Now())
+// }
+
+// func main() {
+// 	port := ":8080"
+// 	mux := http.NewServeMux()
+
+// 	// Welcome route
+// 	mux.HandleFunc("/", welcomeHandler)
+
+// 	// About route
+// 	mux.HandleFunc("/about", aboutHandler)
+
+// 	// Time route
+// 	mux.HandleFunc("/time", timeHandler)
+
+// 	fmt.Println("Server started at port", port)
+// 	err := http.ListenAndServe(port, mux)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// }
+
+// Store the decoded json into struct
+type User struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+func echoHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	fmt.Println("request recieved")
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Cannot use this method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	fmt.Println(r.Method)
-	fmt.Println(r.URL.Path)
-	fmt.Fprintln(w, "Welcome to my API")
-}
+	var user User
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Method)
-	fmt.Println(r.URL.Path)
-	fmt.Fprintln(w, "This is about route.")
-}
+	// decode JOSN recieved from request body
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
 
-func timeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Method)
-	fmt.Println(r.URL.Path)
-	fmt.Fprintln(w, time.Now())
+	// set response header
+	w.Header().Set("Content-Type", "application/json")
+
+	// Build response
+	response := map[string]any{
+		"message": "recieved",
+		"data":    user,
+	}
+
+	// Send response
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
 	port := ":8080"
 	mux := http.NewServeMux()
 
-	// Welcome route
-	mux.HandleFunc("/", welcomeHandler)
+	// POST method `/echo`
+	mux.HandleFunc("/echo", echoHandler)
 
-	// About route
-	mux.HandleFunc("/about", aboutHandler)
-
-	// Time route
-	mux.HandleFunc("/time", timeHandler)
-
-	fmt.Println("Server started at port", port)
-	err := http.ListenAndServe(port, mux)
-	if err != nil {
-		panic(err)
-	}
-
+	fmt.Println("Server starting on port", port)
+	http.ListenAndServe(port, mux)
 }
