@@ -37,6 +37,12 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
+	// Validate data
+	if strings.TrimSpace(todo.Title) == "" {
+		http.Error(w, "Title cannot be empty", http.StatusBadRequest)
+		return
+	}
+
 	todo.Id = nextId
 	todo.IsCompleted = false
 	nextId++
@@ -80,7 +86,11 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 
 	// parse the path
 	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
-	id, _ := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Id", http.StatusBadRequest)
+		return
+	}
 
 	for _, todo := range todos {
 		if todo.Id == id {
@@ -102,7 +112,11 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 
 	// parse path
 	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
-	id, _ := strconv.Atoi(idStr)
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid Id", http.StatusBadRequest)
+		return
+	}
 
 	for i, todo := range todos {
 		if todo.Id == id {
@@ -142,7 +156,11 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 
 	// Parse url
 	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
-	id, _ := strconv.Atoi(idStr)
+	id, errr := strconv.Atoi(idStr)
+	if errr != nil {
+		http.Error(w, "Invalid Id", http.StatusBadRequest)
+		return
+	}
 
 	for i, t := range todos {
 		if t.Id == id {
