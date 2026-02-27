@@ -28,7 +28,7 @@ func generateShortId(length int) string {
 	return string(result)
 }
 
-func createErrorMesage(w http.ResponseWriter, message string) {
+func createErrorMesage(w http.ResponseWriter, status int, message string) {
 	// create error message
 	errorRes := map[string]any{
 		"message": message,
@@ -36,7 +36,7 @@ func createErrorMesage(w http.ResponseWriter, message string) {
 
 	// send response
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(errorRes)
 }
 
@@ -56,7 +56,7 @@ func createSuccessMesage(w http.ResponseWriter, message string, body any) {
 func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	// check if the request method is not POST
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -71,13 +71,13 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate URL
 	if strings.TrimSpace(urlReq.Url) == "" {
-		createErrorMesage(w, "Please enter a URL")
+		createErrorMesage(w, http.StatusBadRequest, "Please enter a URL")
 		return
 	}
 
 	_, ValidateErr := url.ParseRequestURI(urlReq.Url)
 	if ValidateErr != nil {
-		createErrorMesage(w, "Please enter a valid URL")
+		createErrorMesage(w, http.StatusBadRequest, "Please enter a valid URL")
 		return
 	}
 
@@ -88,12 +88,37 @@ func shortenHandler(w http.ResponseWriter, r *http.Request) {
 	createSuccessMesage(w, "URL shortened successfully", bodyMsg)
 }
 
+func redirectHandler(w http.ResponseWriter, r *http.Request) {
+	// check if the request method is not GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// parse URL
+	urlStr := strings.TrimPrefix(r.URL.Path, "/")
+	if strings.TrimSpace(urlStr) == "" {
+		createErrorMesage(w, http.StatusBadRequest, "ShortId cannot be empty")
+		return
+	}
+
+	longUrl, exists := urlStore[urlStr]
+	if !exists {
+		createErrorMesage(w, http.StatusBadRequest, "Invalid URL")
+		return
+	}
+	http.Redirect(w, r, longUrl, http.StatusFound)
+}
+
 func main() {
 	port := ":8080"
 	mux := http.NewServeMux()
 
 	// API endpoint for shorten
 	mux.HandleFunc("/shorten", shortenHandler)
+
+	// API endpoint for LongUrl
+	mux.HandleFunc("/", redirectHandler)
 
 	fmt.Println("Server started on port", port)
 	err := http.ListenAndServe(port, mux)
