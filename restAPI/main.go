@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 // struct for todo
@@ -68,15 +70,121 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resReturn)
 }
 
+func getTodo(w http.ResponseWriter, r *http.Request) {
+	// Check if the request method is not GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		return
+	}
+
+	// parse the path
+	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	id, _ := strconv.Atoi(idStr)
+
+	for _, todo := range todos {
+		if todo.Id == id {
+			w.WriteHeader(http.StatusCreated)
+			json.NewEncoder(w).Encode(todo)
+			return
+		}
+	}
+
+	http.Error(w, "Id not found.", http.StatusNotFound)
+}
+
+func deleteTodo(w http.ResponseWriter, r *http.Request) {
+	// Check if the request mrthod is not DELETE
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		return
+	}
+
+	// parse path
+	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	id, _ := strconv.Atoi(idStr)
+
+	for i, todo := range todos {
+		if todo.Id == id {
+			todos = append(todos[:i], todos[i+1:]...)
+
+			// create response return
+			resReturn := map[string]any{
+				"message": "Todo deleted successfully",
+				"todos":   todos,
+				"success": true,
+			}
+
+			w.WriteHeader(http.StatusNoContent)
+			json.NewEncoder(w).Encode(resReturn)
+			return
+		}
+	}
+	http.Error(w, "Id not matched", http.StatusNotFound)
+}
+
+func updateTodo(w http.ResponseWriter, r *http.Request) {
+	// Check if the request method is not PUT
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusBadRequest)
+		return
+	}
+
+	var todo Todo
+
+	// Parse JSON
+	err := json.NewDecoder(r.Body).Decode(&todo)
+	if err != nil {
+		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Parse url
+	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	id, _ := strconv.Atoi(idStr)
+
+	for i, t := range todos {
+		if t.Id == id {
+			todos[i].Title = todo.Title
+			todos[i].IsCompleted = todo.IsCompleted
+
+			resReturn := map[string]any{
+				"message": "Todo Updated successfully",
+				"todos":   todos,
+				"success": true,
+			}
+			json.NewEncoder(w).Encode(resReturn)
+			return
+		}
+	}
+
+	http.Error(w, "Id not found", http.StatusNotFound)
+}
+
 func main() {
 	port := ":8000"
 	mux := http.NewServeMux()
 
-	// Create todo api - POST method
+	// Create todo route - POST method
 	mux.HandleFunc("/todo", createTodo)
 
-	// Get all todos api - GET method
+	// Get all todos route - GET method
 	mux.HandleFunc("/todos", getTodos)
+
+	mux.HandleFunc("/todo/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		// Get todo by id route - GET method
+		case http.MethodGet:
+			getTodo(w, r)
+
+		// Delete todo by id route - DELETE method
+		case http.MethodDelete:
+			deleteTodo(w, r)
+
+		// Update todo by id route - PUT method
+		case http.MethodPut:
+			updateTodo(w, r)
+		}
+	})
 
 	fmt.Println("Server running on port", port)
 	http.ListenAndServe(port, mux)
