@@ -20,6 +20,12 @@ type Todo struct {
 var todos []Todo
 var nextId = 1
 
+func writeJSON(w http.ResponseWriter, status int, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(data)
+}
+
 func createTodo(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is not POST
 	if r.Method != http.MethodPost {
@@ -54,9 +60,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 		"message": "Todo created successfully",
 		"success": true,
 	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resReturn)
+	writeJSON(w, http.StatusOK, resReturn)
 }
 
 func getTodos(w http.ResponseWriter, r *http.Request) {
@@ -73,8 +77,7 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resReturn)
+	writeJSON(w, http.StatusOK, resReturn)
 }
 
 func getTodo(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +88,7 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse the path
-	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Id", http.StatusBadRequest)
@@ -94,8 +97,7 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 
 	for _, todo := range todos {
 		if todo.Id == id {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(todo)
+			writeJSON(w, http.StatusOK, todo)
 			return
 		}
 	}
@@ -111,7 +113,7 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse path
-	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Id", http.StatusBadRequest)
@@ -129,8 +131,7 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 				"success": true,
 			}
 
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(resReturn)
+			writeJSON(w, http.StatusOK, resReturn)
 			return
 		}
 	}
@@ -155,7 +156,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 	r.Body.Close()
 
 	// Parse url
-	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, errr := strconv.Atoi(idStr)
 	if errr != nil {
 		http.Error(w, "Invalid Id", http.StatusBadRequest)
@@ -172,8 +173,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 				"todos":   todos,
 				"success": true,
 			}
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(resReturn)
+			writeJSON(w, http.StatusOK, resReturn)
 			return
 		}
 	}
