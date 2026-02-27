@@ -35,6 +35,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error decoding JOSN", http.StatusBadRequest)
 		return
 	}
+	r.Body.Close()
 
 	todo.Id = nextId
 	todo.IsCompleted = false
@@ -48,7 +49,7 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resReturn)
 }
 
@@ -66,7 +67,7 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(resReturn)
 }
 
@@ -83,7 +84,7 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 
 	for _, todo := range todos {
 		if todo.Id == id {
-			w.WriteHeader(http.StatusCreated)
+			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(todo)
 			return
 		}
@@ -114,7 +115,7 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 				"success": true,
 			}
 
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(resReturn)
 			return
 		}
@@ -137,6 +138,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error parsing JSON", http.StatusBadRequest)
 		return
 	}
+	r.Body.Close()
 
 	// Parse url
 	idStr := strings.TrimPrefix(r.URL.Path, "/todo/")
@@ -152,6 +154,7 @@ func updateTodo(w http.ResponseWriter, r *http.Request) {
 				"todos":   todos,
 				"success": true,
 			}
+			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(resReturn)
 			return
 		}
@@ -164,13 +167,19 @@ func main() {
 	port := ":8000"
 	mux := http.NewServeMux()
 
-	// Create todo route - POST method
-	mux.HandleFunc("/todo", createTodo)
+	mux.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			// Create todo route - POST method
+			createTodo(w, r)
 
-	// Get all todos route - GET method
-	mux.HandleFunc("/todos", getTodos)
+		case http.MethodGet:
+			// Get all todos route - GET method
+			getTodos(w, r)
+		}
+	})
 
-	mux.HandleFunc("/todo/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		// Get todo by id route - GET method
 		case http.MethodGet:
