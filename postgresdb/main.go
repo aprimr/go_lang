@@ -27,6 +27,11 @@ func main() {
 		// POST Method -> insert todo into db
 		case http.MethodPost:
 			handlers.InsertTodoHandler(w, r, database)
+
+		// GET Method -> fetch all todos from db
+		case http.MethodGet:
+			handlers.FetchAllTodos(w, r, database)
+
 		// handle default case
 		default:
 			http.Error(w, "Method not allowed", 500)
