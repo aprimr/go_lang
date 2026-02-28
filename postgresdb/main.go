@@ -30,11 +30,19 @@ func main() {
 
 		// GET Method -> fetch all todos from db
 		case http.MethodGet:
-			handlers.FetchAllTodos(w, r, database)
+			handlers.FetchAllTodosHandler(w, r, database)
 
 		// handle default case
 		default:
 			http.Error(w, "Method not allowed", 500)
+		}
+	})
+
+	mux.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		// GET Method -> fetch todos by id
+		case http.MethodGet:
+			handlers.FetchTodosByIDHandler(w, r, database)
 		}
 	})
 

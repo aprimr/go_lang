@@ -38,3 +38,28 @@ func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
 	}
 	return todos, nil
 }
+
+func FetchTodosByID(db *sql.DB, id int) ([]models.Todo, error) {
+	rows, err := db.Query("SELECT * FROM todos WHERE id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var todos []models.Todo
+
+	// Loop through rows
+	for rows.Next() {
+		var todo models.Todo
+
+		// Scan each data and store in todo struct
+		err := rows.Scan(&todo.Id, &todo.Title, &todo.Is_completed)
+		if err != nil {
+			return nil, err
+		}
+
+		todos = append(todos, todo)
+	}
+
+	return todos, nil
+}

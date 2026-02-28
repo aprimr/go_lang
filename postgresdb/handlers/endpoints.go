@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/aprimr/goanddatabase/db"
 	"github.com/aprimr/goanddatabase/models"
@@ -34,7 +36,7 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 	}, 201)
 }
 
-func FetchAllTodos(w http.ResponseWriter, r *http.Request, database *sql.DB) {
+func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// GET Method => "/todo" : fetch all todos from db
 	// Check if request method matches
 	if r.Method != http.MethodGet {
@@ -51,5 +53,41 @@ func FetchAllTodos(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 		"message": "Todos fetch successful",
 		"success": true,
 		"data":    todos,
+	}, 200)
+}
+
+func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
+	// GET Method => "/todo/:id" : fetch todos by id
+	// Check if request method matches
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", 500)
+		return
+	}
+
+	// Parse url
+	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
+	id, err := strconv.Atoi(urlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	// Fetch and validate todo
+	todo, err := db.FetchTodosByID(database, id)
+	if err != nil {
+		panic(err)
+	}
+	if todo == nil {
+		utils.EncodeJson(w, map[string]any{
+			"message": "Todo fetch unsuccessful",
+			"success": false,
+			"data":    nil,
+		}, 404)
+		return
+	}
+
+	utils.EncodeJson(w, map[string]any{
+		"message": "Todo fetch successful",
+		"success": true,
+		"data":    todo,
 	}, 200)
 }
