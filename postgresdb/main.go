@@ -5,20 +5,33 @@ import (
 	"net/http"
 
 	"github.com/aprimr/goanddatabase/db"
+	"github.com/aprimr/goanddatabase/handlers"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	port := ":8000"
+	port := ":8099"
 	mux := http.NewServeMux()
 
 	// Connect to database
-	db, err := db.ConnectDB()
+	database, err := db.ConnectDB()
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	defer database.Close()
+
+	// API Endpoints
+	mux.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		// POST Method -> insert todo into db
+		case http.MethodPost:
+			handlers.InsertTodoHandler(w, r, database)
+		// handle default case
+		default:
+			http.Error(w, "Method not allowed", 500)
+		}
+	})
 
 	// SpinUp the server
 	fmt.Println("Server started on port", port)
