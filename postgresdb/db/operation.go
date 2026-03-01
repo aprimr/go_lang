@@ -81,3 +81,21 @@ func DeleteTodosByID(db *sql.DB, id int) error {
 
 	return nil
 }
+
+func UpdateTodo(db *sql.DB, id int, newtodo models.Todo) error {
+	result, err := db.Exec("UPDATE todos SET title=$1, is_completed=$2 WHERE id=$3", newtodo.Title, newtodo.Is_completed, id)
+	if err != nil {
+		return err
+	}
+
+	// Check if something is actually updated
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Todo not found")
+	}
+
+	return nil
+}

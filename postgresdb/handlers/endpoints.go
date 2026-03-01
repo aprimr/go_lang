@@ -16,7 +16,7 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 	// POST Method => "/todos" : insert todo into db
 	// Check if request method matches
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 500)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -40,7 +40,7 @@ func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.
 	// GET Method => "/todos" : fetch all todos from db
 	// Check if request method matches
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", 500)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -60,7 +60,7 @@ func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql
 	// GET Method => "/todos/:id" : fetch todos by id
 	// Check if request method matches
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", 500)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -96,7 +96,7 @@ func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sq
 	// DELETE Method => "/todos/:id" : delete todos by id
 	// Check if request method matches
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", 500)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -119,6 +119,46 @@ func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sq
 
 	utils.EncodeJson(w, map[string]any{
 		"message": "Todo deleted successfully",
+		"success": true,
+	}, 200)
+}
+
+func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
+	// PUT Method => "/todos/:id" : update todos
+	// Check if request method matches
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse url
+	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
+	id, err := strconv.Atoi(urlStr)
+	if err != nil {
+		panic(err)
+	}
+
+	// Parse JSON
+	var todo models.Todo
+	err = json.NewDecoder(r.Body).Decode(&todo)
+	if err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = db.UpdateTodo(database, id, todo)
+	if err != nil {
+		// return error json
+		utils.EncodeJson(w, map[string]any{
+			"message": "Error updating todo",
+			"success": false,
+		}, 404)
+		return
+	}
+
+	utils.EncodeJson(w, map[string]any{
+		"data":    todo,
+		"message": "Todo updated",
 		"success": true,
 	}, 200)
 }

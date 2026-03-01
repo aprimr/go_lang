@@ -43,9 +43,15 @@ func main() {
 		// GET Method -> fetch todos by id
 		case http.MethodGet:
 			handlers.FetchTodosByIDHandler(w, r, database)
-			// DELETE Method -> delete todos by id
+
+		// DELETE Method -> delete todos by id
 		case http.MethodDelete:
 			handlers.DeleteTodosByIDHandler(w, r, database)
+
+		// PUT Method -> update todos by id
+		case http.MethodPut:
+			handlers.UpdateTodoHandler(w, r, database)
+
 		// Handle default case
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
