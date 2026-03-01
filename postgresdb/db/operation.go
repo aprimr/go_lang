@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"math"
 
 	"github.com/aprimr/goanddatabase/models"
 )
@@ -15,10 +16,20 @@ func InsertTodo(db *sql.DB, title string, isCompleted bool) error {
 	return nil
 }
 
-func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
-	rows, err := db.Query("SELECT * FROM todos")
+func FetchAllTodos(db *sql.DB, page int, limit int) (models.PaginatedTodos, error) {
+	// Calculate skip offset value
+	offset := (page - 1) * limit
+
+	// First get total count
+	var totalCount int
+	err := db.QueryRow("SELECT COUNT(*) FROM todos").Scan(&totalCount)
 	if err != nil {
-		return nil, err
+		return models.PaginatedTodos{}, err
+	}
+
+	rows, err := db.Query("SELECT id, title, is_completed FROM todos ORDER BY id LIMIT $1 OFFSET $2", limit, offset)
+	if err != nil {
+		return models.PaginatedTodos{}, err
 	}
 	defer rows.Close()
 
@@ -31,12 +42,22 @@ func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
 		// Scan
 		err := rows.Scan(&todo.Id, &todo.Title, &todo.Is_completed)
 		if err != nil {
-			return nil, err
+			return models.PaginatedTodos{}, err
 		}
 
 		todos = append(todos, todo)
 	}
-	return todos, nil
+
+	// Calculate page count
+	totalPages := int(math.Ceil(float64(totalCount) / float64(limit)))
+
+	return models.PaginatedTodos{
+		Data:       todos,
+		Page:       page,
+		Limit:      limit,
+		TotalCount: totalCount,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func FetchTodosByID(db *sql.DB, id int) (*models.Todo, error) {

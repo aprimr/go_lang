@@ -42,9 +42,25 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// GET Method => "/todos" : fetch all todos from db
 
-	todos, err := db.FetchAllTodos(database)
+	// read query params from url
+	page := utils.ParseQueryInt(r, "page", 1)
+	limit := utils.ParseQueryInt(r, "limit", 10)
+
+	// validate params
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+
+	todos, err := db.FetchAllTodos(database, page, limit)
 	if err != nil {
-		http.Error(w, "Cannot parse url", http.StatusBadRequest)
+		log.Printf("FetchAllTodos: db error: %v", err)
+		utils.EncodeJson(w, map[string]any{
+			"message": "Failed to fetch todos",
+			"success": false,
+		}, http.StatusInternalServerError)
 		return
 	}
 
