@@ -10,10 +10,7 @@ import (
 
 func InsertTodo(db *sql.DB, title string, isCompleted bool) error {
 	_, err := db.Exec("INSERT INTO todos (title, is_completed) VALUES($1, $2)", title, isCompleted)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func FetchAllTodos(db *sql.DB, page int, limit int) (models.PaginatedTodos, error) {
@@ -33,7 +30,7 @@ func FetchAllTodos(db *sql.DB, page int, limit int) (models.PaginatedTodos, erro
 	}
 	defer rows.Close()
 
-	var todos []models.Todo
+	todos := []models.Todo{}
 
 	// Loop through rows
 	for rows.Next() {
@@ -64,6 +61,10 @@ func FetchTodosByID(db *sql.DB, id int) (*models.Todo, error) {
 	var todo models.Todo
 	row := db.QueryRow("SELECT id, title, is_completed FROM todos WHERE id=$1", id)
 	err := row.Scan(&todo.Id, &todo.Title, &todo.Is_completed)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

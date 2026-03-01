@@ -24,9 +24,16 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 		return
 	}
 
+	// Validate data
+	if strings.TrimSpace(todo.Title) == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
 	// Insert Into DB
 	err = db.InsertTodo(database, todo.Title, todo.Is_completed)
 	if err != nil {
+		log.Printf("InsertTodo: db error: %v", err)
 		utils.EncodeJson(w, map[string]any{
 			"message": "Database error",
 			"success": false,
@@ -121,6 +128,7 @@ func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sq
 
 	err = db.DeleteTodosByID(database, id)
 	if err != nil {
+		log.Printf("DeleteTodoByID: db error: %v", err)
 		// return error json
 		utils.EncodeJson(w, map[string]any{
 			"message": "Error deleting todo",
@@ -156,6 +164,7 @@ func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 
 	err = db.UpdateTodo(database, id, todo)
 	if err != nil {
+		log.Printf("UpdateTodo: db error: %v", err)
 		// return error json
 		utils.EncodeJson(w, map[string]any{
 			"message": "Error updating todo",
