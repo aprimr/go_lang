@@ -2,16 +2,24 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/aprimr/goanddatabase/db"
 	"github.com/aprimr/goanddatabase/handlers"
+	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	port := ":8000"
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	
+	port := os.Getenv("SERVER_PORT")
 	mux := http.NewServeMux()
 
 	// Connect to database
@@ -60,7 +68,7 @@ func main() {
 
 	// SpinUp the server
 	fmt.Println("Server started on port", port)
-	err = http.ListenAndServe(port, mux)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", port), mux)
 	if err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
