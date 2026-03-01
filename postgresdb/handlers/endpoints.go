@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,7 +20,7 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 	var todo models.Todo
 	err := json.NewDecoder(r.Body).Decode(&todo)
 	if err != nil {
-		http.Error(w, "Invalid JSON", 500)
+		http.Error(w, "Invalid JSON", 400)
 		return
 	}
 
@@ -43,7 +44,8 @@ func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.
 
 	todos, err := db.FetchAllTodos(database)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Cannot parse url", http.StatusBadRequest)
+		return
 	}
 
 	utils.EncodeJson(w, map[string]any{
@@ -55,18 +57,24 @@ func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.
 
 func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// GET Method => "/todos/:id" : fetch todos by id
-	
+
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Cannot parse url", http.StatusBadRequest)
+		return
 	}
 
 	// Fetch and validate todo
 	todo, err := db.FetchTodosByID(database, id)
 	if err != nil {
-		panic(err)
+		log.Printf("FetchTodoByID: db error: %v", err)
+		utils.EncodeJson(w, map[string]any{
+			"message": "Failed to fetch todo",
+			"success": false,
+		}, http.StatusInternalServerError)
+		return
 	}
 	if todo == nil {
 		utils.EncodeJson(w, map[string]any{
@@ -86,12 +94,13 @@ func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql
 
 func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// DELETE Method => "/todos/:id" : delete todos by id
-	
+
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Cannot parse url", http.StatusBadRequest)
+		return
 	}
 
 	err = db.DeleteTodosByID(database, id)
@@ -112,12 +121,13 @@ func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sq
 
 func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// PUT Method => "/todos/:id" : update todos
-	
+
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Cannot parse url", http.StatusBadRequest)
+		return
 	}
 
 	// Parse JSON
@@ -134,7 +144,7 @@ func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 		utils.EncodeJson(w, map[string]any{
 			"message": "Error updating todo",
 			"success": false,
-		}, 404)
+		}, 500)
 		return
 	}
 
@@ -142,5 +152,5 @@ func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 		"data":    todo,
 		"message": "Todo updated",
 		"success": true,
-	}, 204)
+	}, 200)
 }

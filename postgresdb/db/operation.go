@@ -18,7 +18,7 @@ func InsertTodo(db *sql.DB, title string, isCompleted bool) error {
 func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
 	rows, err := db.Query("SELECT * FROM todos")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -39,29 +39,15 @@ func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
 	return todos, nil
 }
 
-func FetchTodosByID(db *sql.DB, id int) ([]models.Todo, error) {
-	rows, err := db.Query("SELECT id, title, is_completed FROM todos WHERE id=$1", id)
+func FetchTodosByID(db *sql.DB, id int) (*models.Todo, error) {
+	var todo models.Todo
+	row := db.QueryRow("SELECT id, title, is_completed FROM todos WHERE id=$1", id)
+	err := row.Scan(&todo.Id, &todo.Title, &todo.Is_completed)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var todos []models.Todo
-
-	// Loop through rows
-	for rows.Next() {
-		var todo models.Todo
-
-		// Scan each data and store in todo struct
-		err := rows.Scan(&todo.Id, &todo.Title, &todo.Is_completed)
-		if err != nil {
-			return nil, err
-		}
-
-		todos = append(todos, todo)
-	}
-
-	return todos, nil
+	return &todo, nil
 }
 
 func DeleteTodosByID(db *sql.DB, id int) error {
