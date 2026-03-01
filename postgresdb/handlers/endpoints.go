@@ -14,11 +14,6 @@ import (
 
 func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// POST Method => "/todos" : insert todo into db
-	// Check if request method matches
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	// Decode JSON
 	var todo models.Todo
@@ -29,7 +24,14 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 	}
 
 	// Insert Into DB
-	db.InsertTodo(database, todo.Title, todo.Is_completed)
+	err = db.InsertTodo(database, todo.Title, todo.Is_completed)
+	if err != nil {
+		utils.EncodeJson(w, map[string]any{
+			"message": "Database error",
+			"success": false,
+		}, 500)
+		return
+	}
 	utils.EncodeJson(w, map[string]any{
 		"message": "Todo created",
 		"success": true,
@@ -38,11 +40,6 @@ func InsertTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 
 func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// GET Method => "/todos" : fetch all todos from db
-	// Check if request method matches
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	todos, err := db.FetchAllTodos(database)
 	if err != nil {
@@ -58,12 +55,7 @@ func FetchAllTodosHandler(w http.ResponseWriter, r *http.Request, database *sql.
 
 func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// GET Method => "/todos/:id" : fetch todos by id
-	// Check if request method matches
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+	
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
@@ -94,12 +86,7 @@ func FetchTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql
 
 func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// DELETE Method => "/todos/:id" : delete todos by id
-	// Check if request method matches
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+	
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
@@ -125,12 +112,7 @@ func DeleteTodosByIDHandler(w http.ResponseWriter, r *http.Request, database *sq
 
 func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB) {
 	// PUT Method => "/todos/:id" : update todos
-	// Check if request method matches
-	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+	
 	// Parse url
 	urlStr := strings.TrimPrefix(r.URL.Path, "/todos/")
 	id, err := strconv.Atoi(urlStr)
@@ -160,5 +142,5 @@ func UpdateTodoHandler(w http.ResponseWriter, r *http.Request, database *sql.DB)
 		"data":    todo,
 		"message": "Todo updated",
 		"success": true,
-	}, 200)
+	}, 204)
 }

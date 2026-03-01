@@ -7,12 +7,12 @@ import (
 	"github.com/aprimr/goanddatabase/models"
 )
 
-func InsertTodo(db *sql.DB, title string, isCompleted bool) {
+func InsertTodo(db *sql.DB, title string, isCompleted bool) error {
 	_, err := db.Exec("INSERT INTO todos (title, is_completed) VALUES($1, $2)", title, isCompleted)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	fmt.Printf("Data inserted success.")
+	return nil
 }
 
 func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
@@ -40,7 +40,7 @@ func FetchAllTodos(db *sql.DB) ([]models.Todo, error) {
 }
 
 func FetchTodosByID(db *sql.DB, id int) ([]models.Todo, error) {
-	rows, err := db.Query("SELECT * FROM todos WHERE id=$1", id)
+	rows, err := db.Query("SELECT id, title, is_completed FROM todos WHERE id=$1", id)
 	if err != nil {
 		return nil, err
 	}
