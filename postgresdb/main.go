@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	port := ":8099"
+	port := ":8000"
 	mux := http.NewServeMux()
 
 	// Connect to database
@@ -34,7 +34,7 @@ func main() {
 
 		// handle default case
 		default:
-			http.Error(w, "Method not allowed", 500)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
@@ -43,6 +43,12 @@ func main() {
 		// GET Method -> fetch todos by id
 		case http.MethodGet:
 			handlers.FetchTodosByIDHandler(w, r, database)
+			// DELETE Method -> delete todos by id
+		case http.MethodDelete:
+			handlers.DeleteTodosByIDHandler(w, r, database)
+		// Handle default case
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 

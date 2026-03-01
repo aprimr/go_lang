@@ -63,3 +63,21 @@ func FetchTodosByID(db *sql.DB, id int) ([]models.Todo, error) {
 
 	return todos, nil
 }
+
+func DeleteTodosByID(db *sql.DB, id int) error {
+	result, err := db.Exec("DELETE FROM todos WHERE id=$1", id)
+	if err != nil {
+		return err
+	}
+
+	// Check if something is deleted or not
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("Todo not found")
+	}
+
+	return nil
+}
