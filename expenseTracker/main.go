@@ -33,6 +33,10 @@ func main() {
 		case http.MethodPost:
 			handlers.AddExpensesHandler(w, r, database)
 
+		// GET METHOD (`/expenses?page=1&limit=5`) -> get expenses
+		case http.MethodGet:
+			handlers.GetExpensesHandler(w, r, database)
+
 		default:
 			utils.SendError(w, "Method not allowed", http.StatusBadRequest)
 		}
