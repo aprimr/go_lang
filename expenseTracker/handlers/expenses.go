@@ -29,8 +29,9 @@ func AddExpensesHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool
 		utils.SendError(w, "Title is required", http.StatusBadRequest)
 		return
 	}
-	if expense.Amount < 0 {
-		expense.Amount = 0
+	if expense.Amount <= 0 {
+		utils.SendError(w, "Amount must be greater than 0", http.StatusBadRequest)
+		return
 	}
 	if strings.TrimSpace(expense.Category) == "" {
 		utils.SendError(w, "Category is required", http.StatusBadRequest)
@@ -90,6 +91,12 @@ func GetExpenseByIdHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.P
 		return
 	}
 
+	if expense.Id == 0 {
+		log.Println("GetExpenseById -> No expense found")
+		utils.SendError(w, "Expense Not found", http.StatusNotFound)
+		return
+	}
+
 	utils.SendSuccess(w, "Expense fetch successul", expense, http.StatusOK)
 }
 
@@ -143,7 +150,7 @@ func DeleteExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Po
 		return
 	}
 
-	utils.SendSuccess(w, "Expense deleted successfully", nil, http.StatusNoContent)
+	utils.SendSuccess(w, "Expense deleted successfully", nil, http.StatusOK)
 }
 
 // GET -> /expenses/summary

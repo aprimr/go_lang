@@ -56,6 +56,7 @@ func GetExpenses(db *pgxpool.Pool, page int, limit int) (models.PaginatedExpense
 	return models.PaginatedExpenses{
 		Data:       expenses,
 		Page:       page,
+		Limit:      limit,
 		TotalCount: totalRows,
 		TotalPages: totalPages,
 	}, nil
@@ -69,7 +70,7 @@ func GetExpenseById(db *pgxpool.Pool, id int) (models.Expense, error) {
 	row := db.QueryRow(context.Background(), "SELECT id, title, amount, category, date, created_at FROM expenses WHERE id=$1", id)
 	err := row.Scan(&expense.Id, &expense.Title, &expense.Amount, &expense.Category, &expense.Date, &expense.CreatedAt)
 	if err == pgx.ErrNoRows {
-		return models.Expense{}, err
+		return models.Expense{}, fmt.Errorf("No expenses found")
 	}
 	if err != nil {
 		return models.Expense{}, err
@@ -81,11 +82,12 @@ func GetExpenseById(db *pgxpool.Pool, id int) (models.Expense, error) {
 // Update Expense
 func UpdateExpense(db *pgxpool.Pool, id int, expense models.Expense) error {
 	commandTag, err := db.Exec(context.Background(), "UPDATE expenses SET title=$1, amount=$2, category=$3, date=$4 WHERE id=$5", expense.Title, expense.Amount, expense.Category, expense.Date, id)
-	if commandTag.RowsAffected() == 0 {
-		return fmt.Errorf("Error updating expense")
-	}
+
 	if err != nil {
 		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("Error updating expense")
 	}
 
 	return nil
@@ -95,12 +97,11 @@ func UpdateExpense(db *pgxpool.Pool, id int, expense models.Expense) error {
 func DeleteExpense(db *pgxpool.Pool, id int) error {
 	commandTag, err := db.Exec(context.Background(), "DELETE FROM expenses WHERE id=$1", id)
 
-	if commandTag.RowsAffected() == 0 {
-		return fmt.Errorf("Error deleting expense")
-	}
-
 	if err != nil {
 		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("Error deleting expense")
 	}
 
 	return nil
@@ -128,7 +129,7 @@ func GetExpenseSummary(db *pgxpool.Pool) (models.ExpenseSummary, error) {
 
 		err = rows.Scan(&category.Category, &category.Total)
 		if err != nil {
-			return models.ExpenseSummary{}, nil
+			return models.ExpenseSummary{}, err
 		}
 
 		// append category into slice of categories

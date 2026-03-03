@@ -12,19 +12,19 @@ type Expense struct {
 }
 
 type PaginatedExpenses struct {
-	Data       any `json:"data"`
-	Page       int `json:"page"`
-	TotalCount int `json:"total_count"`
-	TotalPages int `json:"total_pages"`
+	Data       []Expense `json:"data"`
+	Page       int       `json:"page"`
+	Limit      int       `json:"limit"`
+	TotalCount int       `json:"total_count"`
+	TotalPages int       `json:"total_pages"`
 }
 
 type CategorySummary struct {
-	Category string `json:"category"`
-	Total    int    `json:"total"`
+	Category string  `json:"category"`
+	Total    float64 `json:"total"`
 }
 
 type ExpenseSummary struct {
-	TotalSpent int               `json:"total_spent"`
+	TotalSpent float64           `json:"total_spent"`
 	ByCategory []CategorySummary `json:"by_category"`
 }
-	
