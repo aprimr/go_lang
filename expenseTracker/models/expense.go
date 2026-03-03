@@ -17,3 +17,14 @@ type PaginatedExpenses struct {
 	TotalCount int `json:"total_count"`
 	TotalPages int `json:"total_pages"`
 }
+
+type CategorySummary struct {
+	Category string `json:"category"`
+	Total    int    `json:"total"`
+}
+
+type ExpenseSummary struct {
+	TotalSpent int               `json:"total_spent"`
+	ByCategory []CategorySummary `json:"by_category"`
+}
+	

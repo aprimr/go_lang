@@ -105,3 +105,36 @@ func DeleteExpense(db *pgxpool.Pool, id int) error {
 
 	return nil
 }
+
+// Get Expense Summary
+func GetExpenseSummary(db *pgxpool.Pool) (models.ExpenseSummary, error) {
+	var expenseSummary models.ExpenseSummary
+	// get total amount
+	err := db.QueryRow(context.Background(), "SELECT COALESCE(SUM(amount), 0) FROM expenses").Scan(&expenseSummary.TotalSpent)
+	if err != nil {
+		return models.ExpenseSummary{}, err
+	}
+
+	// get category and its total
+	rows, err := db.Query(context.Background(), "SELECT category, SUM(amount) AS total FROM expenses GROUP BY category ORDER BY total DESC")
+	if err != nil {
+		return models.ExpenseSummary{}, err
+	}
+
+	// Scan each row
+	var categorySummary []models.CategorySummary
+	for rows.Next() {
+		var category models.CategorySummary
+
+		err = rows.Scan(&category.Category, &category.Total)
+		if err != nil {
+			return models.ExpenseSummary{}, nil
+		}
+
+		// append category into slice of categories
+		categorySummary = append(categorySummary, category)
+	}
+
+	expenseSummary.ByCategory = categorySummary
+	return expenseSummary, err
+}

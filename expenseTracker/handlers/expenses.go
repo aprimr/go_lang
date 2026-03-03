@@ -124,6 +124,7 @@ func UpdateExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Po
 	utils.SendSuccess(w, "Expense Updated Successfully", nil, http.StatusOK)
 }
 
+// DELETE -> /expenses/:id
 func DeleteExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
 	// parse url
 	idStr := strings.TrimPrefix(r.URL.Path, "/expenses/")
@@ -143,4 +144,18 @@ func DeleteExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Po
 	}
 
 	utils.SendSuccess(w, "Expense deleted successfully", nil, http.StatusNoContent)
+}
+
+// GET -> /expenses/summary
+func GetExpenseSummaryHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
+
+	// call GetExpenseSummary
+	expensesSummary, err := repository.GetExpenseSummary(db)
+	if err != nil {
+		log.Printf("GetExpenseSummary -> db error: %v", err)
+		utils.SendError(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendSuccess(w, "Summary fetched successfully", expensesSummary, http.StatusOK)
 }

@@ -42,6 +42,17 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/expenses/summary", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		// GET METHOD (`/expenses/summary`) -> get expense summary
+		case http.MethodGet:
+			handlers.GetExpenseSummaryHandler(w, r, database)
+
+		default:
+			utils.SendError(w, "Method not allowed", http.StatusBadRequest)
+		}
+	})
+
 	mux.HandleFunc("/expenses/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		// GET METHOD (`/expenses/:id`) -> get expense by id
