@@ -20,7 +20,7 @@ func SendError(w http.ResponseWriter, message string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(models.ErrorResponse{
-		Success: true,
+		Success: false,
 		Message: message,
 	})
 }

@@ -42,6 +42,17 @@ func main() {
 		}
 	})
 
+	mux.HandleFunc("/expenses/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		// GET METHOD (`/expenses/:id`) -> get expense by id
+		case http.MethodGet:
+			handlers.GetExpenseByIdHandler(w, r, database)
+
+		default:
+			utils.SendError(w, "Method not allowed", http.StatusBadRequest)
+		}
+	})
+
 	// SpinUp server
 	serverPort := ":" + os.Getenv("SERVER_PORT")
 	log.Println("Server running on port", serverPort)

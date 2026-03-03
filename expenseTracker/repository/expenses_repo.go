@@ -5,6 +5,7 @@ import (
 	"expenseTracker/models"
 	"math"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -57,4 +58,21 @@ func GetExpenses(db *pgxpool.Pool, page int, limit int) (models.PaginatedExpense
 		TotalCount: totalRows,
 		TotalPages: totalPages,
 	}, nil
+}
+
+// Get Expense by id
+func GetExpenseById(db *pgxpool.Pool, id int) (models.Expense, error) {
+	expense := models.Expense{}
+
+	// Fire query
+	row := db.QueryRow(context.Background(), "SELECT id, title, amount, category, date, created_at FROM expenses WHERE id=$1", id)
+	err := row.Scan(&expense.Id, &expense.Title, &expense.Amount, &expense.Category, &expense.Date, &expense.CreatedAt)
+	if err == pgx.ErrNoRows {
+		return models.Expense{}, err
+	}
+	if err != nil {
+		return models.Expense{}, err
+	}
+
+	return expense, nil
 }

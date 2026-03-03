@@ -7,6 +7,7 @@ import (
 	"expenseTracker/utils"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -69,4 +70,25 @@ func GetExpensesHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool
 	}
 
 	utils.SendSuccess(w, "Expenses fetched successfully", expenses, http.StatusOK)
+}
+
+// GET -> /expenses/:id
+func GetExpenseByIdHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
+	// Parse path
+	idStr := strings.TrimPrefix(r.URL.Path, "/expenses/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.SendError(w, "Unexpected error occured", http.StatusBadRequest)
+		return
+	}
+
+	// Call GetExpensesById
+	expense, err := repository.GetExpenseById(db, id)
+	if err != nil {
+		log.Printf("GetExpenseById -> db error: %v", err)
+		utils.SendError(w, "Error fetching expense", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendSuccess(w, "Expense fetch successul", expense, http.StatusOK)
 }
