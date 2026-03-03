@@ -123,3 +123,24 @@ func UpdateExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Po
 
 	utils.SendSuccess(w, "Expense Updated Successfully", nil, http.StatusOK)
 }
+
+func DeleteExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
+	// parse url
+	idStr := strings.TrimPrefix(r.URL.Path, "/expenses/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Printf("Conversion error: %v", err)
+		utils.SendError(w, "Unexpected error occured", http.StatusBadRequest)
+		return
+	}
+
+	// Call DeleteExpense
+	err = repository.DeleteExpense(db, id)
+	if err != nil {
+		log.Printf("DeleteExpense -> dberror: %v", err)
+		utils.SendError(w, "Error deleting expense", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendSuccess(w, "Expense deleted successfully", nil, http.StatusNoContent)
+}

@@ -90,3 +90,18 @@ func UpdateExpense(db *pgxpool.Pool, id int, expense models.Expense) error {
 
 	return nil
 }
+
+// Delete Expense
+func DeleteExpense(db *pgxpool.Pool, id int) error {
+	commandTag, err := db.Exec(context.Background(), "DELETE FROM expenses WHERE id=$1", id)
+
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("Error deleting expense")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -52,6 +52,10 @@ func main() {
 		case http.MethodPut:
 			handlers.UpdateExpenseHandler(w, r, database)
 
+		// DELETE METHOD (`/expenses/:id`) -> delete expense
+		case http.MethodDelete:
+			handlers.DeleteExpenseHandler(w, r, database)
+
 		default:
 			utils.SendError(w, "Method not allowed", http.StatusBadRequest)
 		}
