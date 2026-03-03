@@ -48,6 +48,10 @@ func main() {
 		case http.MethodGet:
 			handlers.GetExpenseByIdHandler(w, r, database)
 
+		// PUT METHOD (`/expenses/:id`) -> update expense
+		case http.MethodPut:
+			handlers.UpdateExpenseHandler(w, r, database)
+
 		default:
 			utils.SendError(w, "Method not allowed", http.StatusBadRequest)
 		}

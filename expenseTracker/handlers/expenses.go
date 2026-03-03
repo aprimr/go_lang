@@ -92,3 +92,34 @@ func GetExpenseByIdHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.P
 
 	utils.SendSuccess(w, "Expense fetch successul", expense, http.StatusOK)
 }
+
+// PUT -> /expenses/:id
+func UpdateExpenseHandler(w http.ResponseWriter, r *http.Request, db *pgxpool.Pool) {
+	// Parse URL
+	idStr := strings.TrimPrefix(r.URL.Path, "/expenses/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Printf("Conversion error: %v", err)
+		utils.SendError(w, "Unexpected error occured", http.StatusBadRequest)
+		return
+	}
+
+	//  Parse JSON
+	var expense models.Expense
+	err = json.NewDecoder(r.Body).Decode(&expense)
+	if err != nil {
+		log.Printf("Invalid JSON: %v", err)
+		utils.SendError(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Call UpdateExpense
+	err = repository.UpdateExpense(db, id, expense)
+	if err != nil {
+		log.Printf("UpdateExpense -> db error: %v", err)
+		utils.SendError(w, "Error updating expense", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendSuccess(w, "Expense Updated Successfully", nil, http.StatusOK)
+}

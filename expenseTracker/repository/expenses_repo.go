@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"expenseTracker/models"
+	"fmt"
 	"math"
 
 	"github.com/jackc/pgx/v5"
@@ -75,4 +76,17 @@ func GetExpenseById(db *pgxpool.Pool, id int) (models.Expense, error) {
 	}
 
 	return expense, nil
+}
+
+// Update Expense
+func UpdateExpense(db *pgxpool.Pool, id int, expense models.Expense) error {
+	commandTag, err := db.Exec(context.Background(), "UPDATE expenses SET title=$1, amount=$2, category=$3, date=$4 WHERE id=$5", expense.Title, expense.Amount, expense.Category, expense.Date, id)
+	if commandTag.RowsAffected() == 0 {
+		return fmt.Errorf("Error updating expense")
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
