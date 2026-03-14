@@ -24,3 +24,13 @@ func HandleUserChat(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("The user id is %v and chat id is %v.\n", id, chatId)
 }
+
+func GetPostById(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	fmt.Printf("The post id is %v.\n", id)
+
+}
+
+func CeateAPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Post created")
+}
